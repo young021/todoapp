@@ -1,9 +1,10 @@
 import React from 'react';
-import { StyleSheet, Text, View,FlatList,AsyncStorage} from 'react-native';
+import { StyleSheet, Text, View,FlatList,AsyncStorage,DatePickerAndroid} from 'react-native';
 import Header from './app/components/Header';
 import Subtitle from './app/components/Subtitle';
 import Input from './app/components/Input';
 import Listitem from './app/components/Listitem';
+// import { Font } from 'expo';
 
 
 export default class App extends React.Component {
@@ -14,10 +15,36 @@ export default class App extends React.Component {
       todos:[]
     }
   }
+  // async componentDidMount() {
+  //   await Font.loadAsync({
+  //     'UhBee mysen': require('./assets/fonts/UbBee-mysen.ttf'),
+  //   });
+  // }
   componentWillMount(){
     this._getData()
+    // this._mydatepicker()
   }
 
+
+  _addtimer = async() =>{
+    try {
+      const { action, year, month, day } = await DatePickerAndroid.open({
+        // Use `new Date()` for current date.
+        // May 25 2020. Month 0 is January.
+        mode:'spinner',
+        date: new Date(),
+        
+      });
+      if (action !== DatePickerAndroid.dismissedAction) {
+        // Selected year, month (0-11), day
+        console.log(year,month+1,day)
+        this._addTodoItem(year,month+1,day)
+      }
+    } catch ({ code, message }) {
+      console.warn('Cannot open date picker', message);
+    }
+
+  }
   _storeData= async ()=>{
     try {
       await AsyncStorage.setItem('@todo:state',JSON.stringify(this.state));
@@ -61,11 +88,11 @@ export default class App extends React.Component {
   _changeText=(value)=>{
     this.setState({inputValue:value});
   }
-  _addTodoItem=() =>{
+  _addTodoItem=(year,month,day) =>{
     if(this.state.inputValue !== ""){
       const prevTodo = this.state.todos
 
-      const newTodo = {title : this.state.inputValue, iscomplete: false}
+      const newTodo = {title : this.state.inputValue, iscomplete: false, deadline: year,month,day}
 
       this.setState({
         inputValue:'',
@@ -75,6 +102,7 @@ export default class App extends React.Component {
   }
   render(){
   return (
+    
     <View style={styles.container}>
       <View style={styles.headercenter}>
         <Header /> 
@@ -85,7 +113,8 @@ export default class App extends React.Component {
         <Input
           value ={this.state.inputValue}
           changeText = {this._changeText}
-          addTodoItem = {this._addTodoItem}/>
+          addTodoItem = {this._addTodoItem}
+          addtimer = {this._addtimer}/>
 
       </View>
       <View style={styles.subtitleposition}>
@@ -97,6 +126,7 @@ export default class App extends React.Component {
           keyExtractor ={(item,index)=>{ return `$(index)`}}/>
 
       </View>
+
     </View>
   );
 }
